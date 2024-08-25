@@ -1,0 +1,11 @@
+Model Information:
+* title:	Krab
+* source:	https://sketchfab.com/3d-models/krab-99f7b9e64b2540988f3790eec59b1e86
+* author:	lolo_ivens (https://sketchfab.com/lolo_ivens)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Krab" (https://sketchfab.com/3d-models/krab-99f7b9e64b2540988f3790eec59b1e86) by lolo_ivens (https://sketchfab.com/lolo_ivens) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

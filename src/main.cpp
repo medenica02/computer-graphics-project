@@ -26,13 +26,14 @@ void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 unsigned int loadCubemap(vector<std::string> faces);
 unsigned int loadTexture(const char *path);
+void modelRender(const Shader& ourShader,glm::vec3 modelPosition,float modelScale);
 
 // sirina i visina prozora koji se prikazuje
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 //kamera i njena pozicija
-Camera camera(glm::vec3(0.0f,0.0f,3.0f));
+Camera camera(glm::vec3(0.0f,0.0f,15.0f));
 
 bool ImGuiEnabled=false;
 bool CameraMouseMovementUpdateEnabled=true;
@@ -47,7 +48,16 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 //pozicije modela u svetu i faktori skaliranja za iste
-
+glm::vec3 blokPosition=glm::vec3(1.0f,1.0f,1.0f);
+float blokScale=1.9f;
+glm::vec3 creeperPosition=glm::vec3(10.0f,1.0f,1.0f);
+float creeperScale=1.4f;
+glm::vec3 krabPosition=glm::vec3(15.0f,1.0f,1.0f);
+float krabScale=1.5f;
+glm::vec3 scyphozoaPosition=glm::vec3(19.0f,1.0f,1.0f);
+float scyphozoaScale=1.8f;
+glm::vec3 sharkPosition=glm::vec3(14.0f,2.0f,1.0f);
+float sharkScale=0.8f;
 
 
 
@@ -123,8 +133,16 @@ int main() {
 
 
     //ucitavanje modela
-    Model ourModel("resources/objects/backpack/backpack.obj");
-    ourModel.SetShaderTextureNamePrefix("material.");
+    Model blokModel("resources/objects/blok/scene.gltf");
+    blokModel.SetShaderTextureNamePrefix("material.");
+    Model creeperModel("resources/objects/creeper/scene.gltf");
+    creeperModel.SetShaderTextureNamePrefix("material.");
+    Model krabModel("resources/objects/krab/scene.gltf");
+    krabModel.SetShaderTextureNamePrefix("material.");
+    Model scyphozoaModel("resources/objects/scyphozoa/scene.gltf");
+    scyphozoaModel.SetShaderTextureNamePrefix("material.");
+    Model sharkModel("resources/objects/shark/scene.gltf");
+    sharkModel.SetShaderTextureNamePrefix("material.");
 
     //stbi_set_flip_vertically_on_load(false);
 
@@ -133,9 +151,9 @@ int main() {
 
 
     PointLight pointLight;
-    pointLight.position = glm::vec3(1.0f, 3.0, 1.0);
-    pointLight.ambient = glm::vec3(6.0f, 6.0f, 6.0f);
-    pointLight.diffuse = glm::vec3(0.4, 0.7, 0.5);
+    pointLight.position = glm::vec3(0.0f, 1.0, 0.0);
+    pointLight.ambient = glm::vec3(1.0f);
+    pointLight.diffuse = glm::vec3(1.0f);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
@@ -243,41 +261,52 @@ int main() {
 
         //ukljucujemo shader uvek
         ourShader.use();
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        ourShader.setVec3("pointLight.position", pointLight.position);
-        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        ourShader.setVec3("pointLight.specular", pointLight.specular);
-        ourShader.setFloat("pointLight.constant", pointLight.constant);
-        ourShader.setFloat("pointLight.linear", pointLight.linear);
-        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-        ourShader.setVec3("viewPosition",camera.Position);
-        ourShader.setFloat("material.shininess", 32.0f);
-        // view/projection transformations
+//        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+//        ourShader.setVec3("pointLight.position", pointLight.position);
+//        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
+//        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+//        ourShader.setVec3("pointLight.specular", pointLight.specular);
+//        ourShader.setFloat("pointLight.constant", pointLight.constant);
+//        ourShader.setFloat("pointLight.linear", pointLight.linear);
+//        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+//        ourShader.setVec3("viewPosition",camera.Position);
+//        ourShader.setFloat("material.shininess", 32.0f);
+//        // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+                                               (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+//        glm::mat4 view = camera.GetViewMatrix();
+//        ourShader.setMat4("projection", projection);
+//        ourShader.setMat4("view", view);
+//
+//        //directional light
+//        ourShader.setVec3("dirLight.direction",glm::vec3(0.5f,0.7f,0.4f));
+//        ourShader.setVec3("dirLight.ambient", glm::vec3(0.3f));
+//        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
+//        ourShader.setVec3("dirLight.specular",glm::vec3(0.2f));
+//
+//        // render the loaded model
+//        glm::mat4 model = glm::mat4(1.0f);
+//        model = glm::translate(model,
+//                               glm::vec3(blokPosition)); // translate it down so it's at the center of the scene
+//        model = glm::scale(model, glm::vec3(blokScale));    // it's a bit too big for our scene, so scale it down
+//        ourShader.setMat4("model", model);
 
-        //directional light
-        ourShader.setVec3("dirLight.direction",glm::vec3(0.5f,0.7f,0.4f));
-        ourShader.setVec3("dirLight.ambient", glm::vec3(0.3f));
-        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
-        ourShader.setVec3("dirLight.specular",glm::vec3(0.2f));
+        modelRender(ourShader,blokPosition,blokScale);
+        blokModel.Draw(ourShader);
+        modelRender(ourShader,creeperPosition,creeperScale);
+        creeperModel.Draw(ourShader);
+        modelRender(ourShader,krabPosition,krabScale);
+        krabModel.Draw(ourShader);
+        modelRender(ourShader,scyphozoaPosition,scyphozoaScale);
+        scyphozoaModel.Draw(ourShader);
+        modelRender(ourShader,sharkPosition,sharkScale);
+        sharkModel.Draw(ourShader);
 
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               glm::vec3(20.0f,20.2f,-10.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.005f));    // it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
         // draw skybox as last
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
         skyboxShader.setMat4("projection", projection);
         // skybox kocka
@@ -432,4 +461,46 @@ unsigned int loadTexture(const char *path){
     }
 
     return textureID;
+}
+
+void modelRender(const Shader& ourShader,glm::vec3 modelPosition,float modelScale){
+
+
+    PointLight pointLight;
+    pointLight.position = glm::vec3(0.0f, 1.0, 0.0);
+    pointLight.ambient = glm::vec3(1.0f);
+    pointLight.diffuse = glm::vec3(1.0f);
+    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
+
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.09f;
+    pointLight.quadratic = 0.032f;
+    ourShader.setVec3("pointLight.position", pointLight.position);
+    ourShader.setVec3("pointLight.ambient", pointLight.ambient);
+    ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+    ourShader.setVec3("pointLight.specular", pointLight.specular);
+    ourShader.setFloat("pointLight.constant", pointLight.constant);
+    ourShader.setFloat("pointLight.linear", pointLight.linear);
+    ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+    ourShader.setVec3("viewPosition",camera.Position);
+    ourShader.setFloat("material.shininess", 32.0f);
+    // view/projection transformations
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+                                            (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    ourShader.setMat4("projection", projection);
+    ourShader.setMat4("view", view);
+
+    //directional light
+    ourShader.setVec3("dirLight.direction",glm::vec3(0.5f,0.7f,0.4f));
+    ourShader.setVec3("dirLight.ambient", glm::vec3(0.3f));
+    ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
+    ourShader.setVec3("dirLight.specular",glm::vec3(0.2f));
+
+    // render the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model,
+                           glm::vec3(modelPosition)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(modelScale));    // it's a bit too big for our scene, so scale it down
+    ourShader.setMat4("model", model);
 }
