@@ -33,7 +33,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 //kamera i njena pozicija
-Camera camera(glm::vec3(0.0f,0.0f,15.0f));
+Camera camera(glm::vec3(2.5f,5.0f,20.0f));
 
 bool ImGuiEnabled=false;
 bool CameraMouseMovementUpdateEnabled=true;
@@ -50,15 +50,24 @@ float lastFrame = 0.0f;
 //pozicije modela u svetu i faktori skaliranja za iste
 glm::vec3 blokPosition=glm::vec3(1.0f,1.0f,1.0f);
 float blokScale=1.9f;
-glm::vec3 creeperPosition=glm::vec3(10.0f,1.0f,1.0f);
-float creeperScale=1.4f;
-glm::vec3 krabPosition=glm::vec3(15.0f,1.0f,1.0f);
-float krabScale=1.5f;
-glm::vec3 scyphozoaPosition=glm::vec3(19.0f,1.0f,1.0f);
-float scyphozoaScale=1.8f;
-glm::vec3 sharkPosition=glm::vec3(14.0f,2.0f,1.0f);
-float sharkScale=0.8f;
+glm::vec3 creeperPosition=glm::vec3(3.5f,1.0f,1.4f);
+float creeperScale=2.0f;
+glm::vec3 krabPosition=glm::vec3(7.3f,1.0f,1.7f);
+float krabScale=1.0f;
+glm::vec3 scyphozoaPosition=glm::vec3(-3.0f,0.0f,1.8f);
+float scyphozoaScale=0.8f;
+//glm::vec3 sharkPosition=glm::vec3(1.5f,7.0f,1.6f);
+glm::vec3 sharkPosition=glm::vec3(1.5f,7.0f,1.6f);
+float sharkScale=1.8f;
 
+
+
+//struct DirLight {
+//    glm::vec3 direction;
+//    glm::vec3 ambient;
+//    glm::vec3 diffuse;
+//    glm::vec3 specular;
+//};
 
 
 //struktura za pointlight
@@ -115,19 +124,20 @@ int main() {
     //stbi_set_flip_vertically_on_load(true);
 
 
-    //dubina
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
-    //blending
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CW);
+
 
     //imamo apstrakciju za shader, tj klasu Shader
     //pravljenje shader programa
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs","resources/shaders/skybox.fs");
-
+    Shader blendingShader("resources/shaders/blending.vs","resources/shaders/blending.fs");
     //ucitavanje teksture
 
 
@@ -161,9 +171,48 @@ int main() {
     pointLight.quadratic = 0.032f;
 
 
+//    DirLight dirLight;
+//    dirLight.direction=glm::vec3(0.5f,0.7f,0.4f);
+//    dirLight.ambient=glm::vec3(0.2f);
+//    dirLight.diffuse=glm::vec3(0.5f);
+//    dirLight.specular=glm::vec3(0.1f);
 
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    float transparentVertices[] = {
+            // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    // transparent VAO
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    unsigned int transparentTexture = loadTexture(FileSystem::getPath("resources/textures/megatank.png").c_str());
+
+    vector<glm::vec3> megatenkovi;
+    megatenkovi.push_back(glm::vec3(-1.4f,  0.0f, -0.4f));
+    megatenkovi.push_back(glm::vec3( 1.3f,  0.0f,  0.2f));
+    megatenkovi.push_back(glm::vec3( 0.2f,  0.0f,  0.5f));
+    megatenkovi.push_back(glm::vec3(-0.7f,  0.0f, -1.7f));
+    megatenkovi.push_back(glm::vec3( 0.3f,  0.0f, -0.5f));
+
+    blendingShader.use();
+    blendingShader.setInt("texture1", 0);
 
     //skybox koordinate
     float skyboxVertices[] = {
@@ -261,35 +310,28 @@ int main() {
 
         //ukljucujemo shader uvek
         ourShader.use();
-//        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-//        ourShader.setVec3("pointLight.position", pointLight.position);
-//        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-//        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-//        ourShader.setVec3("pointLight.specular", pointLight.specular);
-//        ourShader.setFloat("pointLight.constant", pointLight.constant);
-//        ourShader.setFloat("pointLight.linear", pointLight.linear);
-//        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-//        ourShader.setVec3("viewPosition",camera.Position);
-//        ourShader.setFloat("material.shininess", 32.0f);
-//        // view/projection transformations
+        pointLight.position = glm::vec3(3.0 * cos(currentFrame), 3.0f, 3.0 * sin(currentFrame));
+        ourShader.setVec3("pointLight.position", pointLight.position);
+        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
+        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+        ourShader.setVec3("pointLight.specular", pointLight.specular);
+        ourShader.setFloat("pointLight.constant", pointLight.constant);
+        ourShader.setFloat("pointLight.linear", pointLight.linear);
+        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+        ourShader.setVec3("viewPosition",camera.Position);
+        ourShader.setFloat("material.shininess", 32.0f);
+        // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-//        glm::mat4 view = camera.GetViewMatrix();
-//        ourShader.setMat4("projection", projection);
-//        ourShader.setMat4("view", view);
-//
-//        //directional light
-//        ourShader.setVec3("dirLight.direction",glm::vec3(0.5f,0.7f,0.4f));
-//        ourShader.setVec3("dirLight.ambient", glm::vec3(0.3f));
-//        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
-//        ourShader.setVec3("dirLight.specular",glm::vec3(0.2f));
-//
-//        // render the loaded model
-//        glm::mat4 model = glm::mat4(1.0f);
-//        model = glm::translate(model,
-//                               glm::vec3(blokPosition)); // translate it down so it's at the center of the scene
-//        model = glm::scale(model, glm::vec3(blokScale));    // it's a bit too big for our scene, so scale it down
-//        ourShader.setMat4("model", model);
+        glm::mat4 view = camera.GetViewMatrix();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
+
+        //directional light
+//        ourShader.setVec3("dirLight.direction",dirLight.direction);
+//        ourShader.setVec3("dirLight.ambient",dirLight.ambient);
+//        ourShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+//        ourShader.setVec3("dirLight.specular",dirLight.specular);
 
         modelRender(ourShader,blokPosition,blokScale);
         blokModel.Draw(ourShader);
@@ -302,13 +344,27 @@ int main() {
         modelRender(ourShader,sharkPosition,sharkScale);
         sharkModel.Draw(ourShader);
 
+        blendingShader.use();
+        blendingShader.setMat4("projection", projection);
+        blendingShader.setMat4("view", view);
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < megatenkovi.size(); i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, megatenkovi[i]);
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
         // draw skybox as last
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
-        glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
         skyboxShader.setMat4("projection", projection);
+
         // skybox kocka
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -317,8 +373,6 @@ int main() {
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS); // set depth function back to default
-
-
 
 
         //zamenjuje trenutni bafer s onim koji sluzi za crtanje piksela
@@ -330,6 +384,8 @@ int main() {
     //brisemo vao i vbo jer nam ne trebaju vise
     glDeleteVertexArrays(1,&skyboxVAO);
     glDeleteVertexArrays(1,&skyboxVBO);
+    glDeleteVertexArrays(1,&transparentVAO);
+    glDeleteVertexArrays(1,&transparentVBO);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -464,38 +520,6 @@ unsigned int loadTexture(const char *path){
 }
 
 void modelRender(const Shader& ourShader,glm::vec3 modelPosition,float modelScale){
-
-
-    PointLight pointLight;
-    pointLight.position = glm::vec3(0.0f, 1.0, 0.0);
-    pointLight.ambient = glm::vec3(1.0f);
-    pointLight.diffuse = glm::vec3(1.0f);
-    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
-
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
-    ourShader.setVec3("pointLight.position", pointLight.position);
-    ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-    ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-    ourShader.setVec3("pointLight.specular", pointLight.specular);
-    ourShader.setFloat("pointLight.constant", pointLight.constant);
-    ourShader.setFloat("pointLight.linear", pointLight.linear);
-    ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-    ourShader.setVec3("viewPosition",camera.Position);
-    ourShader.setFloat("material.shininess", 32.0f);
-    // view/projection transformations
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-                                            (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    ourShader.setMat4("projection", projection);
-    ourShader.setMat4("view", view);
-
-    //directional light
-    ourShader.setVec3("dirLight.direction",glm::vec3(0.5f,0.7f,0.4f));
-    ourShader.setVec3("dirLight.ambient", glm::vec3(0.3f));
-    ourShader.setVec3("dirLight.diffuse", glm::vec3(0.4f));
-    ourShader.setVec3("dirLight.specular",glm::vec3(0.2f));
 
     // render the loaded model
     glm::mat4 model = glm::mat4(1.0f);
