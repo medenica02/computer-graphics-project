@@ -331,10 +331,12 @@ int main() {
 //        ourShader.setVec3("dirLight.direction",dirLight.direction);
 //        ourShader.setVec3("dirLight.ambient",dirLight.ambient);
 //        ourShader.setVec3("dirLight.diffuse", dirLight.diffuse);
-//        ourShader.setVec3("dirLight.specular",dirLight.specular);
-
+//        ourShader.setVec3("dirLight.specular",dirLight.specular)
+        glDisable(GL_CULL_FACE);
+        //mozemo uci u "unutrasnjost" bloka
         modelRender(ourShader,blokPosition,blokScale);
         blokModel.Draw(ourShader);
+        glEnable(GL_CULL_FACE);
         modelRender(ourShader,creeperPosition,creeperScale);
         creeperModel.Draw(ourShader);
         modelRender(ourShader,krabPosition,krabScale);
@@ -343,6 +345,8 @@ int main() {
         scyphozoaModel.Draw(ourShader);
         modelRender(ourShader,sharkPosition,sharkScale);
         sharkModel.Draw(ourShader);
+        glDisable(GL_CULL_FACE);
+
 
         blendingShader.use();
         blendingShader.setMat4("projection", projection);
