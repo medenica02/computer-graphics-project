@@ -32,8 +32,12 @@ void modelRender(const Shader& ourShader,glm::vec3 modelPosition,float modelScal
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+//advanced lighting
+bool blinn = false;
+bool blinnKeyPressed = false;
+
 //kamera i njena pozicija
-Camera camera(glm::vec3(2.5f,5.0f,20.0f));
+Camera camera(glm::vec3(2.5f,4.0f,20.0f));
 
 bool ImGuiEnabled=false;
 bool CameraMouseMovementUpdateEnabled=true;
@@ -59,15 +63,6 @@ float scyphozoaScale=0.8f;
 //glm::vec3 sharkPosition=glm::vec3(1.5f,7.0f,1.6f);
 glm::vec3 sharkPosition=glm::vec3(1.5f,7.0f,1.6f);
 float sharkScale=1.8f;
-
-
-
-//struct DirLight {
-//    glm::vec3 direction;
-//    glm::vec3 ambient;
-//    glm::vec3 diffuse;
-//    glm::vec3 specular;
-//};
 
 
 //struktura za pointlight
@@ -138,8 +133,6 @@ int main() {
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs","resources/shaders/skybox.fs");
     Shader blendingShader("resources/shaders/blending.vs","resources/shaders/blending.fs");
-    //ucitavanje teksture
-
 
 
     //ucitavanje modela
@@ -154,12 +147,8 @@ int main() {
     Model sharkModel("resources/objects/shark/scene.gltf");
     sharkModel.SetShaderTextureNamePrefix("material.");
 
-    //stbi_set_flip_vertically_on_load(false);
 
-
-
-
-
+    //vrednosti za pointLight
     PointLight pointLight;
     pointLight.position = glm::vec3(0.0f, 1.0, 0.0);
     pointLight.ambient = glm::vec3(1.0f);
@@ -169,13 +158,6 @@ int main() {
     pointLight.constant = 1.0f;
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
-
-
-//    DirLight dirLight;
-//    dirLight.direction=glm::vec3(0.5f,0.7f,0.4f);
-//    dirLight.ambient=glm::vec3(0.2f);
-//    dirLight.diffuse=glm::vec3(0.5f);
-//    dirLight.specular=glm::vec3(0.1f);
 
 
     float transparentVertices[] = {
@@ -327,11 +309,9 @@ int main() {
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
-        //directional light
-//        ourShader.setVec3("dirLight.direction",dirLight.direction);
-//        ourShader.setVec3("dirLight.ambient",dirLight.ambient);
-//        ourShader.setVec3("dirLight.diffuse", dirLight.diffuse);
-//        ourShader.setVec3("dirLight.specular",dirLight.specular)
+        ourShader.setBool("blinn",blinn);
+
+
         glDisable(GL_CULL_FACE);
         //mozemo uci u "unutrasnjost" bloka
         modelRender(ourShader,blokPosition,blokScale);
@@ -455,6 +435,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !blinnKeyPressed){
+        blinn = !blinn;
+        blinnKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE){
+        blinnKeyPressed = false;
+    }
+
 }
 //ucitavanje skybox
 unsigned int loadCubemap(vector<std::string> faces)

@@ -4,7 +4,7 @@ Codelyoko
 
 * `WASD` - kretanje
 * `ESC` - zatvaranje prozora
-
+* `B` - Blinn-Phong model osvetljenja
 ## Tehnike koriscenje u projektu
 
 * Shaders
