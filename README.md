@@ -5,6 +5,10 @@ Codelyoko
 * `WASD` - kretanje
 * `ESC` - zatvaranje prozora
 * `B` - Blinn-Phong model osvetljenja
+* `H` - HDR
+* `R` - Bloom
+* `E/Q`- Exposure
+* `G` - Gamma correction
 ## Tehnike koriscenje u projektu
 
 * Shaders
@@ -17,6 +21,8 @@ Codelyoko
 * Face culling
 * Advanced lighting
 * Cubemaps
+* HDR/Bloom
+* Gamma correction
 
 
 ## Modeli i teksture
